@@ -1,5 +1,6 @@
 from flask import Flask, request, jsonify
 from utils.enc import encode, decode
+import time
 
 app = Flask(__name__)
 
@@ -21,13 +22,15 @@ def user_check(username):
     except:
         return True
 
-def add_user(username, password, session_token):
+def add_user(username, password):
     try:
         with open(database_path, 'a') as file:
-            file.write(f"{username}--=--{encode(data=password, password=dbs_pass)}--=--\n")
-        return True
+            make_session = {'user': username, 'password': password, 'timec': int(time.time()), 'timee': int(time.time()) + 86400}
+            session_token = encode(data=str(make_session), password=dbs_pass)
+            file.write(f"{username}--=--{encode(data=password, password=dbs_pass)}--=--{session_token}\n")
+        return {'msg': 0, 'session': session_token}
     except:
-        return False
+        return {'msg': 1, 'session': None}
 
 @app.route('/register', methods=['POST'])
 def register():
