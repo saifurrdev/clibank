@@ -6,7 +6,7 @@ app = Flask(__name__)
 
 # Credentials
 database_path = 'dbs/dbs_enc.ecb'
-dbs_pass = "Adaa1458FF@"
+dbs_pass = "Adaa1458FF@" # you can set a strong password here
 
 @app.route('/')
 def hello():
