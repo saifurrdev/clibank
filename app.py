@@ -5,6 +5,7 @@ app = Flask(__name__)
 
 # Credentials
 database_path = 'dbs/dbs_enc.ecb'
+dbs_pass = "Adaa1458FF@"
 
 @app.route('/')
 def hello():
@@ -20,6 +21,14 @@ def user_check(username):
     except:
         return True
 
+def add_user(username, password, session_token):
+    try:
+        with open(database_path, 'a') as file:
+            file.write(f"{username}--=--{encode(data=password, password=dbs_pass)}--=--\n")
+        return True
+    except:
+        return False
+
 @app.route('/register', methods=['POST'])
 def register():
     data = request.json
@@ -28,8 +37,6 @@ def register():
     if user_check(username) == True:
         return jsonify({'status': 'error', 'message': 'User already exists'}), 400
     
-
-
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000)
