@@ -22,6 +22,20 @@ def user_check(username):
     except:
         return True
 
+@app.route('/api/session', methods=['POST'])
+def check_session():
+    data = request.json
+    session_token = data.get('session')
+    try:
+        session_data = decode(encoded=session_token, password=dbs_pass)
+        session_dict = eval(session_data)
+        if 'timee' in session_dict and int(time.time()) < session_dict['timee']:
+            return jsonify({'status': 0, 'message': 'Session valid'}), 200
+        else:
+            return jsonify({'status': 1, 'message': 'Session expired'}), 401
+    except Exception as e:
+        return jsonify({'status': 1, 'message': 'Invalid session'}), 401
+
 def add_user(username, password):
     try:
         with open(database_path, 'a') as file:
@@ -32,13 +46,18 @@ def add_user(username, password):
     except:
         return {'msg': 1, 'session': None}
 
-@app.route('/register', methods=['POST'])
+@app.route('/api/register', methods=['POST'])
 def register():
     data = request.json
     username = data.get('user')
     password = data.get('pass')
     if user_check(username) == True:
-        return jsonify({'status': 'error', 'message': 'User already exists'}), 400
+        return jsonify({'status': 1, 'message': 'User already exists'}), 400
+    result = add_user(username, password)
+    if result['msg'] == 0:
+        return jsonify({'status': 0, 'session': result['session']}), 200
+    else:
+        return jsonify({'status': 1, 'message': 'Registration failed'}), 500
     
 
 if __name__ == '__main__':
