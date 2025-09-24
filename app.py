@@ -70,7 +70,7 @@ def login():
                 stored_user, stored_pass_enc, stored_session = item.split('--=--')
                 if stored_user == username:
                     stored_pass = decode(encoded=stored_pass_enc, password=dbs_pass)
-                    if stored_pass == password
+                    if stored_pass == password:
                         new_session_data = {'user': username, 'password': password, 'timec': int(time.time()), 'timee': int(time.time()) + 86400}
                         new_session_token = encode(data=str(new_session_data), password=dbs_pass)
                         updated_lines = []
@@ -87,5 +87,6 @@ def login():
         return jsonify({'status': 1, 'message': 'User not found'}), 404
     except Exception as e:
         return jsonify({'status': 1, 'message': 'Login failed'}), 500
+    
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000)
