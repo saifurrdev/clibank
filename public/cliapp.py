@@ -33,3 +33,19 @@ if session_token:
     if check_session():
         print("Session valid. You are logged in.")
         linex()
+
+def register():
+    print_logo()
+    print("Register New User")
+    linex()
+    username = input("Enter username: ")
+    password = input("Enter password: ")
+    json_data = {'user': username, 'pass': password}
+    url = f"{api_url}/api/register"
+    r = requests.post(url, json=json_data).json()
+    if r['status'] == 0:
+        with open(session, 'w') as f:
+            f.write(r['session'])
+        print("Registration successful. Session token saved.")
+    else:
+        print(f"Error: {r['message']}")
