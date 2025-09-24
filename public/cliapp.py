@@ -108,3 +108,22 @@ def dashboard():
             print("No active session found.")
     else:
         print("Invalid choice. Please select 1 or 2.")
+
+def view_profile():
+    print_logo()
+    data = """
+    Profile Information
+    -------------------"""
+
+def balance():
+    print_logo()
+    url = f"{api_url}/api/balance"
+    json_data = {'session': session_token}
+    r = requests.post(url, json=json_data).json()
+    if r['status'] == 0:
+        return r['balance']
+    else:
+        return None
+
+if __name__ == "__main__":
+    main()
