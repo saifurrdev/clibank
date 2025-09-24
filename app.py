@@ -6,6 +6,8 @@ app = Flask(__name__)
 
 # Credentials
 database_path = 'dbs/dbs_enc.ecb'
+balance_path = 'dbs/balancebd.ecb'
+
 dbs_pass = "Adaa1458FF@" # you can set a strong password here
 
 @app.route('/')
@@ -87,6 +89,58 @@ def login():
         return jsonify({'status': 1, 'message': 'User not found'}), 404
     except Exception as e:
         return jsonify({'status': 1, 'message': 'Login failed'}), 500
+
+def read_or_append_or_update_balance(username, amount=None):
+    try:
+        if amount is None:
+            with open(balance_path, 'r') as file:
+                for item in file.read().splitlines():
+                    stored_user, stored_balance_enc = item.split('--=--')
+                    if stored_user == username:
+                        stored_balance = decode(encoded=stored_balance_enc, password=dbs_pass)
+                        return {'msg': 0, 'balance': float(stored_balance)}
+            return {'msg': 1, 'balance': None}
+        else:
+            updated = False
+            updated_lines = []
+            with open(balance_path, 'r') as file:
+                for item in file.read().splitlines():
+                    stored_user, stored_balance_enc = item.split('--=--')
+                    if stored_user == username:
+                        new_balance = float(decode(encoded=stored_balance_enc, password=dbs_pass)) + amount
+                        new_balance_enc = encode(data=str(new_balance), password=dbs_pass)
+                        updated_lines.append(f"{username}--=--{new_balance_enc}\n")
+                        updated = True
+                    else:
+                        updated_lines.append(item + '\n')
+            if not updated:
+                new_balance_enc = encode(data=str(amount), password=dbs_pass)
+                updated_lines.append(f"{username}--=--{new_balance_enc}\n")
+            with open(balance_path, 'w') as f:
+                f.writelines(updated_lines)
+            return {'msg': 0, 'balance': new_balance if updated else amount}
+    except Exception as e:
+        return {'msg': 1, 'balance': None}
+
+@app.route('/api/balance', methods=['POST'])
+def balance():
+    data = request.json
+    session_token = data.get('session')
+    try:
+        session_data = decode(encoded=session_token, password=dbs_pass)
+        session_dict = eval(session_data)
+        if 'timee' in session_dict and int(time.time()) < session_dict['timee']:
+            username = session_dict['user']
+            result = read_or_append_or_update_balance(username)
+            if result['msg'] == 0:
+                return jsonify({'status': 0, 'balance': result['balance']}), 200
+            else:
+                return jsonify({'status': 1, 'message': 'Balance retrieval failed'}), 500
+        else:
+            return jsonify({'status': 1, 'message': 'Session expired'}), 401
+    except Exception as e:
+        return jsonify({'status': 1, 'message': 'Invalid session'}), 401
     
+            
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000)
